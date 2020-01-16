@@ -1,0 +1,13 @@
+[
+	{
+		"keys": ["alt+shift+f"],
+		"command": "purty",
+		"context": [
+			{
+				"key": "selector",
+				"operator": "equal",
+				"operand": "source.purescript"
+			}
+		]
+	}
+]
