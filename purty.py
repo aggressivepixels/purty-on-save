@@ -92,8 +92,10 @@ def find_purty(view):
         open_panel(view, bad_absolute_path)
         return None
 
+    local_purty = find_local_purty(os.path.dirname(view.file_name()))
+    if local_purty != None:
+        return local_purty
     
-
     exts = os.environ['PATHEXT'].lower().split(os.pathsep) if os.name == 'nt' else ['']
     for directory in os.environ['PATH'].split(os.pathsep):
         for ext in exts:
@@ -103,6 +105,30 @@ def find_purty(view):
 
     open_panel(view, cannot_find_purty())
     return None
+
+
+purty_for_path_cache = {}
+def find_local_purty(directory):
+    cached_purty_path = purty_for_path_cache.get(directory)
+    if cached_purty_path != None:
+        if os.access(cached_purty_path, os.X_OK):
+            return cached_purty_path
+        else:
+            del purty_for_path_cache[directory]
+            return find_local_purty(directory)
+
+    if directory == '/':
+        return None
+
+    print(directory)
+    for file in os.listdir(directory):
+        if file == 'node_modules' and os.path.isdir(os.path.join(directory, file)):
+            path = os.path.join(directory, 'node_modules', '.bin', 'purty')
+            if os.access(path, os.X_OK):
+                purty_for_path_cache[directory] = path
+                return path
+
+    return find_local_purty(os.path.dirname(directory))
 
 
 def open_panel(view, content):
@@ -121,9 +147,10 @@ I tried run purty, but I could not find it on your computer.
 -----------------------------------------------------------------------
 NOTE: Your PATH variable led me to check in the following directories:
     """ + '\n    '.join(os.environ['PATH'].split(os.pathsep)) + """
-But I could not find `purty` in any of them. Please let me know
-at https://github.com/aggressivepixels/purty-on-save/issues if this does
-not seem correct!
+But I could not find `purty` in any of them. I also tried to look into the
+closest 'node_modules' folder. Please let me know at 
+https://github.com/aggressivepixels/purty-on-save/issues if this does not seem 
+correct!
 """
 
 
